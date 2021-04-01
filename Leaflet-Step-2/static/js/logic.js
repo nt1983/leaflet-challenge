@@ -1,29 +1,6 @@
 var earthquake_json="https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_week.geojson";
 var plate_json="https://raw.githubusercontent.com/fraxen/tectonicplates/master/GeoJSON/PB2002_plates.json";
 
-//marker size
-// function markersize(magnitude, layerselect) {
-//     return magnitude*5;
-// }
-
-// function changecolor (magnitude) {
-//     switch (magnitude) {
-//     case magnitude > 5: 
-//         return layerselect="layer5plus";
-//     case magnitude > 4:
-//         return layerselect="layer5";
-//     case magnitude > 3:
-//         return layerselect="layer4";
-//     case magnitude > 2:
-//         return layerselect="layer3";
-//     case magnitude > 1:
-//         return layerselect="layer2";
-//     case magnitude < 1:
-//         return layerselect="layer01";
-//     }
-//     console.log(layerselect);
-//}
-
 // Create the satellite layer that will be the background of our map
 var satellite = L.tileLayer("https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}", {
         attribution: "Map data &copy; <a href=\"https://www.openstreetmap.org/\">OpenStreetMap</a> contributors, <a href=\"https://creativecommons.org/licenses/by-sa/2.0/\">CC-BY-SA</a>, Imagery © <a href=\"https://www.mapbox.com/\">Mapbox</a>",
@@ -62,7 +39,8 @@ var layers = {
     layer3: new L.LayerGroup(),
     layer4: new L.LayerGroup(),
     layer5: new L.LayerGroup(),
-    layer5plus: new L.LayerGroup()
+    layer5plus: new L.LayerGroup(),
+    plates: new L.LayerGroup()
   };
 
 // Create the map object with options
@@ -75,7 +53,8 @@ var mymap = L.map("mapid", {
     layers.layer3,
     layers.layer4,
     layers.layer5,
-    layers.layer5plus
+    layers.layer5plus,
+    layers.plates
   ]
 });
 
@@ -88,7 +67,8 @@ var overlays = {
     "30-50": layers.layer3,
     "50-70": layers.layer4,
     "70-90": layers.layer5,
-    "90+":layers.layer5plus
+    "90+":layers.layer5plus,
+    "Plates": layers.plates
   };
 
 // Create a control for our layers, add our overlay layers to it
@@ -99,22 +79,28 @@ var legend = L.control({ position: 'bottomright' });
 
 // Insert a div with the class of "legend"
 legend.onAdd = function() {
-    var div = L.DomUtil.create("div", "legend")
+    var div = L.DomUtil.create("div", "legend");
+    div.innerHTML += '<i style="background: green"></i><span>-10 - 10</span><br>';
+    div.innerHTML += '<i style="background: greenyellow"></i><span>10 - 30</span><br>';
+    div.innerHTML += '<i style="background: yellow"></i><span>30 - 50</span><br>';
+    div.innerHTML += '<i style="background: orange"></i><span>50 - 70</span><br>';
+    div.innerHTML += '<i style="background: tomato"></i><span>70 - 90</span><br>';
+    div.innerHTML += '<i style="background: red"></i><span>>90+</span><br>';  
     return div;
 }
+legend.addTo(mymap);
 
 var colorlayer = {
-    layer01: "greenyellow",
-    layer2: "yellow",
-    layer3: "gold",
+    layer01: "green",
+    layer2: "greenyellow",
+    layer3: "yellow",
     layer4: "orange",
-    layer5:"darkorange",
+    layer5:"tomato",
     layer5plus:"red"
   };
   var layerselect="";
 d3.json(earthquake_json, function(EarthquakeData) {
     DataArray = EarthquakeData.features;
-    //layerselect="";
     for (var i = 0; i < DataArray.length; i++) {
         console.log(DataArray[0]);
         var latitude =DataArray[i].geometry.coordinates[1];
@@ -149,7 +135,7 @@ d3.json(earthquake_json, function(EarthquakeData) {
         console.log(layerselect);
         
         var markersize = L.circleMarker([latitude, longitude],
-            {radius: magnitude*5,
+            {radius: magnitude*7,
               fillOpacity: 1,
               fillColor: colorlayer[layerselect],
               color: "black",
@@ -157,18 +143,23 @@ d3.json(earthquake_json, function(EarthquakeData) {
         
         markersize.addTo(layers[layerselect]); 
         markersize.bindPopup("Place: " +DataArray[i].properties.place + "<br> Magnitude: " + magnitude +"<br>");
-        //updateLegend(magnitude);
+    
     };
 
 });
+d3.json(plate_json, function (pdata){
+    var parray=pdata.geometry;
+    for (var i = 0; i < parray.length; i++) {
+        console.log(parray[i]);
+        //var latitude =DataArray[i].geometry.coordinates[1];
+        //var longitude =DataArray[i].geometry.coordinates[0];
+        //var magnitude = DataArray[i].properties.mag;
+        //console.log(latitude, longitude, magnitude);
+    // L.geoJson(pdata, {
+    //    color:"yellow",
+    //    weight:3
+    // }).addTo(plates);
+    // plates.addTo(mymap);
+}
+});
 
-// function updateLegend(magnitude) {
-// document.querySelector(".legend").innerHTML = [
-//     "<p class='layer01'>-10-10" +magnitude+ "</p>",
-//     "<p class='layer2'>10-30" + magnitude+"</p>",
-//     "<p class='layer3'>30-50" + magnitude+"</p>",
-//     "<p class='layer4'>50-70" + magnitude+"</p>",
-//     "<p class='layer5'>70-90" + magnitude+"</p>",
-//     "<p class='layer5plus'>90+" + magnitude+"</p>"
-//   ].join("");
-// }

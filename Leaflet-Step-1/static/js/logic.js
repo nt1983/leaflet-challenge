@@ -1,28 +1,7 @@
 var earthquake_json="https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_week.geojson";
 var plate_json="https://raw.githubusercontent.com/fraxen/tectonicplates/master/GeoJSON/PB2002_plates.json";
 
-//marker size
-// function markersize(magnitude, layerselect) {
-//     return magnitude*5;
-// }
 
-// function changecolor (magnitude) {
-//     switch (magnitude) {
-//     case magnitude > 5: 
-//         return layerselect="layer5plus";
-//     case magnitude > 4:
-//         return layerselect="layer5";
-//     case magnitude > 3:
-//         return layerselect="layer4";
-//     case magnitude > 2:
-//         return layerselect="layer3";
-//     case magnitude > 1:
-//         return layerselect="layer2";
-//     case magnitude < 1:
-//         return layerselect="layer01";
-//     }
-//     console.log(layerselect);
-//}
 
 // Create the satellite layer that will be the background of our map
 var satellite = L.tileLayer("https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}", {
@@ -32,7 +11,7 @@ var satellite = L.tileLayer("https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}
         accessToken: API_KEY
 });
 
-    // Define light layer
+    // light layer
 var lightMap = L.tileLayer("https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}", {
         attribution: "© <a href='https://www.mapbox.com/about/maps/'>Mapbox</a> © <a href='http://www.openstreetmap.org/copyright'>OpenStreetMap</a> <strong><a href='https://www.mapbox.com/map-feedback/' target='_blank'>Improve this map</a></strong>",
         maxZoom: 18,
@@ -40,7 +19,7 @@ var lightMap = L.tileLayer("https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/
         accessToken: API_KEY
 });
 
-    // Deine outdoors layer 
+    // outdoors layer 
 var outdoors = L.tileLayer("https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}", {
         attribution: "Map data &copy; <a href=\"https://www.openstreetmap.org/\">OpenStreetMap</a> contributors, <a href=\"https://creativecommons.org/licenses/by-sa/2.0/\">CC-BY-SA</a>, Imagery © <a href=\"https://www.mapbox.com/\">Mapbox</a>",
         maxZoom: 18,
@@ -68,7 +47,7 @@ var layers = {
 // Create the map object with options
 var mymap = L.map("mapid", {
     center: [39.876019, -117.224121],
-  zoom: 5,
+  zoom: 6,
   layers: [
     layers.layer01,
     layers.layer2,
@@ -79,7 +58,7 @@ var mymap = L.map("mapid", {
   ]
 });
 
-satellite.addTo(mymap);
+lightMap.addTo(mymap);
 
 // Create an overlays object to add to the layer control
 var overlays = {
@@ -99,16 +78,23 @@ var legend = L.control({ position: 'bottomright' });
 
 // Insert a div with the class of "legend"
 legend.onAdd = function() {
-    var div = L.DomUtil.create("div", "legend")
+    var div = L.DomUtil.create("div", "legend");
+    div.innerHTML += '<i style="background: green"></i><span>-10 - 10</span><br>';
+    div.innerHTML += '<i style="background: greenyellow"></i><span>10 - 30</span><br>';
+    div.innerHTML += '<i style="background: yellow"></i><span>30 - 50</span><br>';
+    div.innerHTML += '<i style="background: orange"></i><span>50 - 70</span><br>';
+    div.innerHTML += '<i style="background: tomato"></i><span>70 - 90</span><br>';
+    div.innerHTML += '<i style="background: red"></i><span>>90+</span><br>';  
     return div;
 }
+legend.addTo(mymap);
 
 var colorlayer = {
-    layer01: "greenyellow",
-    layer2: "yellow",
-    layer3: "gold",
+    layer01: "green",
+    layer2: "greenyellow",
+    layer3: "yellow",
     layer4: "orange",
-    layer5:"darkorange",
+    layer5:"tomato",
     layer5plus:"red"
   };
   var layerselect="";
@@ -149,7 +135,7 @@ d3.json(earthquake_json, function(EarthquakeData) {
         console.log(layerselect);
         
         var markersize = L.circleMarker([latitude, longitude],
-            {radius: magnitude*5,
+            {radius: magnitude*7,
               fillOpacity: 1,
               fillColor: colorlayer[layerselect],
               color: "black",
@@ -157,18 +143,8 @@ d3.json(earthquake_json, function(EarthquakeData) {
         
         markersize.addTo(layers[layerselect]); 
         markersize.bindPopup("Place: " +DataArray[i].properties.place + "<br> Magnitude: " + magnitude +"<br>");
-        //updateLegend(magnitude);
+    
     };
 
 });
 
-// function updateLegend(magnitude) {
-// document.querySelector(".legend").innerHTML = [
-//     "<p class='layer01'>-10-10" +magnitude+ "</p>",
-//     "<p class='layer2'>10-30" + magnitude+"</p>",
-//     "<p class='layer3'>30-50" + magnitude+"</p>",
-//     "<p class='layer4'>50-70" + magnitude+"</p>",
-//     "<p class='layer5'>70-90" + magnitude+"</p>",
-//     "<p class='layer5plus'>90+" + magnitude+"</p>"
-//   ].join("");
-// }
