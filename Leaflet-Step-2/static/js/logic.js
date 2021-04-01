@@ -102,7 +102,6 @@ var colorlayer = {
 d3.json(earthquake_json, function(EarthquakeData) {
     DataArray = EarthquakeData.features;
     for (var i = 0; i < DataArray.length; i++) {
-        console.log(DataArray[0]);
         var latitude =DataArray[i].geometry.coordinates[1];
         var longitude =DataArray[i].geometry.coordinates[0];
         var magnitude = DataArray[i].properties.mag;
@@ -147,19 +146,21 @@ d3.json(earthquake_json, function(EarthquakeData) {
     };
 
 });
-d3.json(plate_json, function (pdata){
-    var parray=pdata.geometry;
-    for (var i = 0; i < parray.length; i++) {
-        console.log(parray[i]);
-        //var latitude =DataArray[i].geometry.coordinates[1];
-        //var longitude =DataArray[i].geometry.coordinates[0];
-        //var magnitude = DataArray[i].properties.mag;
-        //console.log(latitude, longitude, magnitude);
-    // L.geoJson(pdata, {
-    //    color:"yellow",
-    //    weight:3
-    // }).addTo(plates);
-    // plates.addTo(mymap);
-}
-});
+// d3.json(plate_json, function (pdata){
+//     var parray=pdata.features;
+//     console.log(parray);
+//     for (var i = 0; i < parray.length; i++) {
+
+//         console.log(parray[i].geometry);
+//         //var latitude =DataArray[i].geometry.coordinates[1];
+//         //var longitude =DataArray[i].geometry.coordinates[0];
+//         //var magnitude = DataArray[i].properties.mag;
+//         //console.log(latitude, longitude, magnitude);
+//     // L.geoJson(pdata, {
+//     //    color:"yellow",
+//     //    weight:3
+//     // }).addTo(plates);
+//     // plates.addTo(mymap);
+// }
+// });
 
