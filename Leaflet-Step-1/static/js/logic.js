@@ -1,68 +1,163 @@
 var earthquake_json="https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_week.geojson";
-// var API_KEY="pk.eyJ1IjoibnQxOTgzIiwiYSI6ImNrbWh6ZjRlMzBjOHUyb3RuZWNoaWk3YmgifQ.ZgFls354gv7BM5FiIZje_Q"
-function markersize(magnitude) {
-    if (magnitude ==0) {return 1; }
-    else {return magnitude*4;}
+var plate_json="https://raw.githubusercontent.com/fraxen/tectonicplates/master/GeoJSON/PB2002_plates.json";
+
+//marker size
+function markersize(magnitude, layerselect) {
+    return magnitude*5;
 }
 
+// function changecolor (magnitude) {
+//     switch (magnitude) {
+//     case magnitude > 5: 
+//         return layerselect="layer5plus";
+//     case magnitude > 4:
+//         return layerselect="layer5";
+//     case magnitude > 3:
+//         return layerselect="layer4";
+//     case magnitude > 2:
+//         return layerselect="layer3";
+//     case magnitude > 1:
+//         return layerselect="layer2";
+//     case magnitude < 1:
+//         return layerselect="layer01";
+//     }
+//     console.log(layerselect);
+//}
+
 // Create the satellite layer that will be the background of our map
-var initLayer= L.tileLayer("https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}", {
-    attribution: "Map data &copy; <a href=\"https://www.openstreetmap.org/\">OpenStreetMap</a> contributors, <a href=\"https://creativecommons.org/licenses/by-sa/2.0/\">CC-BY-SA</a>, Imagery © <a href=\"https://www.mapbox.com/\">Mapbox</a>",
-    maxZoom: 10,
-    id: "mapbox/streets-v11",
-    accessToken: API_KEY
+var satellite = L.tileLayer("https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}", {
+        attribution: "Map data &copy; <a href=\"https://www.openstreetmap.org/\">OpenStreetMap</a> contributors, <a href=\"https://creativecommons.org/licenses/by-sa/2.0/\">CC-BY-SA</a>, Imagery © <a href=\"https://www.mapbox.com/\">Mapbox</a>",
+        maxZoom: 18,
+        id: "mapbox/satellite-streets-v11",
+        accessToken: API_KEY
 });
+
+    // Define light layer
+var lightMap = L.tileLayer("https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}", {
+        attribution: "© <a href='https://www.mapbox.com/about/maps/'>Mapbox</a> © <a href='http://www.openstreetmap.org/copyright'>OpenStreetMap</a> <strong><a href='https://www.mapbox.com/map-feedback/' target='_blank'>Improve this map</a></strong>",
+        maxZoom: 18,
+        id: "mapbox/light-v10",
+        accessToken: API_KEY
+});
+
+    // Deine outdoors layer 
+var outdoors = L.tileLayer("https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}", {
+        attribution: "Map data &copy; <a href=\"https://www.openstreetmap.org/\">OpenStreetMap</a> contributors, <a href=\"https://creativecommons.org/licenses/by-sa/2.0/\">CC-BY-SA</a>, Imagery © <a href=\"https://www.mapbox.com/\">Mapbox</a>",
+        maxZoom: 18,
+        id: "mapbox/outdoors-v11",
+        accessToken: API_KEY
+});
+
+// Define a baseMaps object to hold our base layers
+var baseMaps = {
+    "Satellite": satellite,
+    "Greyscale": lightMap,
+    "Outdoors": outdoors
+};
+
+// Initialize all of the LayerGroups we'll be using
+var layers = {
+    layer01: new L.LayerGroup(),
+    layer2: new L.LayerGroup(),
+    layer3: new L.LayerGroup(),
+    layer4: new L.LayerGroup(),
+    layer5: new L.LayerGroup(),
+    layer5plus: new L.LayerGroup()
+  };
 
 // Create the map object with options
 var mymap = L.map("mapid", {
-    center: [51.505, -0.09],
-    zoom: 5
+    center: [39.876019, -117.224121],
+  zoom: 6,
+  layers: [
+    layers.layer01,
+    layers.layer2,
+    layers.layer3,
+    layers.layer4,
+    layers.layer5,
+    layers.layer5plus
+  ]
 });
 
-initLayer.addTo(mymap);
-    
-function chagecolor (magnitude) {
-    switch (magnitude) {
-      case magnitude > 5:
-        return "red";
-      case magnitude > 4:
-        return "redorange";
-      case magnitude > 3:
-        return "orange";
-      case magnitude > 2:
-        return "yellow";
-      case magnitude > 1:
-         return "green";
-    }
-} 
-//create style of circle marker
-function style(feature) 
-{
-  return {
-    opacity: 1,
-    fillOpacity: 0.75,
-    fillColor: chagecolor(feature.properties.mag),
-    color: "#000000",
-    radius: markersize(feature.properties.mag),
-    stroke: true,
-    weight: 0.5
-  }
-};
+satellite.addTo(mymap);
 
-//Creating layer groups for control chekcboxes
-var quakeLayer = new L.LayerGroup() ;
-var plateLayer = new L.LayerGroup() ;
+// Create an overlays object to add to the layer control
+var overlays = {
+    "-10-10": layers.layer01,
+    "10-30": layers.layer2,
+    "30-50": layers.layer3,
+    "50-70": layers.layer4,
+    "70-90": layers.layer5,
+    "90+":layers.layer5plus
+  };
 
-d3.json(earthquake_json).then(function (data) {
-    console.log(data);
-    L.geoJson(data, {
-        pointToLayer: function(feature,latlng) {
-            return L.circleMarker(latlng);
-        },
-        style: styleInfo,
-        onEachFeature: function(feature, layer) {
+// Create a control for our layers, add our overlay layers to it
+L.control.layers(baseMaps, overlays).addTo(mymap);
 
+//Create Legend
+var legend = L.control({ position: 'bottomright' });
+
+// Insert a div with the class of "legend"
+legend.onAdd = function() {
+    var div = L.DomUtil.create("div", "legend")
+    return div;
+}
+
+var colorlayer = {
+    layer01: "greenyellow",
+    layer2: "yellow",
+    layer3: "gold",
+    layer4: "orange",
+    layer5:"darkorange",
+    layer5plus:"tomato"
+  };
+  var layerselect="";
+d3.json(earthquake_json, function(EarthquakeData) {
+    DataArray = EarthquakeData.features;
+    //layerselect="";
+    for (var i = 0; i < DataArray.length; i++) {
+        console.log(DataArray[0]);
+        var latitude =DataArray[i].geometry.coordinates[1];
+        var longitude =DataArray[i].geometry.coordinates[0];
+        var magnitude = DataArray[i].properties.mag;
+        console.log(latitude, longitude, magnitude);
+        
+        if (magnitude > 5)
+        {
+            layerselect="layer5plus";
         }
-    })
+        else if (magnitude > 4)
+        {
+            layerselect="layer5";
+        }
+        else if(magnitude > 3)
+        {
+            layerselect="layer4";
+        }
+        else if(magnitude > 2)
+        {
+            layerselect="layer3";
+        }
+        else if(magnitude >1)
+        {
+            layerselect="layer2";
+        }
+        else
+        {
+            layerselect="layer01";
+        } 
+        console.log(layerselect);
+        
+        var markersize = L.circleMarker([latitude, longitude],
+            {radius: magnitude*5,
+              fillOpacity: 1,
+              fillColor: colorlayer[layerselect],
+              color: "black",
+              weight: 1});
+        
+        markersize.addTo(layers[layerselect]); 
 
-    }).addTo(quakeLayer);
+
+    }
+
+});
